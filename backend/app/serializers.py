@@ -3,7 +3,7 @@ from app.models import Jogo, FeedBack
 from drf_extra_fields.fields import Base64ImageField
 
 class JogoSerializer(serializers.ModelSerializer):
-  imagem = Base64ImageField(required=True)
+  imagem = Base64ImageField(required=True, use_url=True)
   class Meta:
     model = Jogo
     fields = ('id', 'link', 'titulo', 'qt_jogadores', 'imagem')
