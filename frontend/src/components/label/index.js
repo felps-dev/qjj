@@ -18,6 +18,7 @@ const Label = (props) => {
         alignSelf: "center",
         color: props.color,
         ...props.style,
+        fontWeight: props.w,
       }}
     >
       {props.children}

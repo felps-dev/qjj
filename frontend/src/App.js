@@ -2,10 +2,11 @@ import "./App.css";
 import backImage from "./static/background.png";
 import gitLogo from "./static/github.png";
 import { makeStyles } from "@material-ui/core/styles";
-import { Label, Button, TextField } from "./components";
+import { Label, Button, TextField, Dialog } from "./components";
 import { Grid } from "@material-ui/core";
 import { useState } from "react";
 import { useDeviceDetect } from "./utils";
+import Collapse from "@material-ui/core/Collapse";
 import api from "./api";
 
 const useMainStyles = makeStyles((theme) => ({
@@ -18,6 +19,7 @@ const useMainStyles = makeStyles((theme) => ({
     width: "100%",
     borderRadius: 8,
     marginTop: theme.spacing(2),
+    cursor: "pointer",
   },
   gameTitle: {
     marginTop: theme.spacing(2),
@@ -29,52 +31,68 @@ function Main() {
 
   const [players, setPlayers] = useState(0);
   const [currentGame, setCurrentGame] = useState(undefined);
+  const [loaded, setLoaded] = useState(false);
+  const [canClick, setCanClick] = useState(true);
 
   function getRandomGame() {
+    setLoaded(false);
+    setCanClick(false);
     api()
       .get(`jogos/${players}/rolar/`)
       .then((a) => {
-        setCurrentGame(a.data);
+        setTimeout(() => {
+          setCurrentGame(a.data);
+          setLoaded(true);
+          setCanClick(true);
+        }, 500);
       });
   }
 
   return (
-    <Grid className={classes.main} container justify="center">
-      <Grid item lg={4} md={6} sm={8} xs={12}>
-        <Label color="white" size={37} spacing={-2.25}>
-          Descubra qual <b>jogo</b> jogar com seus <b>amigos</b>
-        </Label>
-        <Label color="white" size={21} style={{ marginTop: 15 }}>
-          Digite a quantidade de players
-        </Label>
-        {currentGame && (
-          <div>
-            <img
-              src={currentGame.imagem}
-              className={classes.gameImage}
-              alt="game"
-            />
-            <Label color="white" size={13}>
-              <b>Clique na imagem do jogo para entrar no site</b>
-            </Label>
-            <Label color="white" size={29} className={classes.gameTitle}>
-              <b>{currentGame.titulo}</b>
-            </Label>
-          </div>
-        )}
-        <TextField
-          style={{ marginTop: 15 }}
-          value={players}
-          onChange={(e) => setPlayers(e.target.value)}
-          type="number"
-          align="center"
-          size={35}
-        />
-        <Button onClick={getRandomGame} style={{ marginTop: 15 }}>
-          Me dá <b style={{ marginLeft: 5 }}>um Jogo</b>
-        </Button>
+    <>
+      <Dialog open={true} title="EEbaa" />
+      <Grid className={classes.main} container justify="center">
+        <Grid item lg={4} md={6} sm={8} xs={12}>
+          <Label color="white" size={37} spacing={-2.25}>
+            Descubra qual <b>jogo</b> jogar com seus <b>amigos</b>
+          </Label>
+          <Label color="white" size={21} style={{ marginTop: 15 }}>
+            Digite a quantidade de players
+          </Label>
+          {currentGame && (
+            <Collapse in={loaded}>
+              <img
+                src={currentGame.imagem}
+                className={classes.gameImage}
+                alt="game"
+                onClick={() => window.open(currentGame.link)}
+              />
+              <Label color="white" size={13}>
+                <b>Clique na imagem do jogo para entrar no site</b>
+              </Label>
+              <Label color="white" size={29} className={classes.gameTitle}>
+                <b>{currentGame.titulo}</b>
+              </Label>
+            </Collapse>
+          )}
+          <TextField
+            style={{ marginTop: 15 }}
+            value={players}
+            onChange={(e) => setPlayers(e.target.value)}
+            type="number"
+            align="center"
+            size={35}
+          />
+          <Button
+            onClick={getRandomGame}
+            style={{ marginTop: 15 }}
+            loading={!canClick}
+          >
+            Me dá <b style={{ marginLeft: 5 }}>um Jogo</b>
+          </Button>
+        </Grid>
       </Grid>
-    </Grid>
+    </>
   );
 }
 
@@ -123,14 +141,21 @@ function Footer() {
         Felipe Correa
       </Label>
       <div style={{ display: "flex", justifyContent: "center" }}>
-        <Button size={19} spacing={-1.25} uncase pure>
+        <Button
+          size={19}
+          spacing={-1.25}
+          uncase
+          pure
+          companion={
+            <img
+              className={classes.githubLogo}
+              src={gitLogo}
+              alt="Github"
+              height={40}
+            />
+          }
+        >
           Dar <b style={{ marginLeft: 5 }}>FeedBack</b>
-          <img
-            className={classes.githubLogo}
-            src={gitLogo}
-            alt="Github"
-            height={40}
-          />
         </Button>
       </div>
     </div>
