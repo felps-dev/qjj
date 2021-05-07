@@ -16,6 +16,7 @@ const Label = (props) => {
         fontSize: props.size,
         letterSpacing: props.spacing,
         alignSelf: "center",
+        textAlign: props.align,
         color: props.color,
         ...props.style,
         fontWeight: props.w,

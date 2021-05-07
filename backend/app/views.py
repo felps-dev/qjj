@@ -6,7 +6,7 @@ from app.serializers import FeedBackSerializer, JogoSerializer
 from app.models import Jogo, FeedBack
 import random
 
-class GetClassMixin(object):
+class GetClassMixin(viewsets.ModelViewSet):
     def get_permissions(self):
         try:
             # return permission_classes depending on `action`
@@ -15,7 +15,7 @@ class GetClassMixin(object):
             # action is not set return default permission_classes
             return [permission() for permission in self.permission_action_classes['default']]
 
-class JogoViewSet(viewsets.ModelViewSet, GetClassMixin):
+class JogoViewSet(GetClassMixin):
   permission_action_classes = {"default": [IsAdminUser], 'create': [AllowAny], 'rolar': [AllowAny]}
   serializer_class = JogoSerializer
   queryset = Jogo.objects.all()
@@ -27,7 +27,7 @@ class JogoViewSet(viewsets.ModelViewSet, GetClassMixin):
     jogo = random.choice(jogos) if len(jogos) > 0 else None
     return Response(None if jogo is None else JogoSerializer(jogo,context={"request": request}).data, 200)
 
-class FeedBackViewSet(viewsets.ModelViewSet, GetClassMixin):
+class FeedBackViewSet(GetClassMixin):
   permission_action_classes = {"default": [IsAdminUser], 'create': [AllowAny]}
   serializer_class = FeedBackSerializer
   queryset = FeedBack.objects.all()

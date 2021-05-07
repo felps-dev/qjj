@@ -30,16 +30,15 @@ const Button = (props) => {
     >
       <ButtonBase
         disabled={props.loading || props.disabled}
-        onClick={onClick}
         style={{
-          paddingTop: props.pure ? (!props.pad ? 5 : 15) : 15,
-          paddingBottom: props.pure ? (!props.pad ? 5 : 15) : 15,
-          paddingLeft: props.pure ? (!props.pad ? 20 : 50) : 50,
-          paddingRight: props.pure ? (!props.pad ? 20 : 50) : 50,
+          paddingTop: (props.size || 19) - 4,
+          paddingBottom: (props.size || 19) - 4,
+          paddingLeft: (props.size || 25) * 2,
+          paddingRight: (props.size || 25) * 2,
           fontFamily: "Inter",
           backgroundColor: props.inverted ? "black" : "white",
           borderRadius: 8,
-          fontSize: 19,
+          fontSize: props.size ? props.size : 19,
           boxShadow: props.pure ? "" : "0px 4px 4px rgba(0, 0, 0, 0.25)",
           textTransform: props.uncase ? "none" : "uppercase",
           letterSpacing: props.spacing ? props.spacing : -1.25,
@@ -49,6 +48,7 @@ const Button = (props) => {
         TouchRippleProps={{
           style: { color: props.inverted ? "white" : "black" },
         }}
+        onClick={onClick}
       >
         <div
           style={{

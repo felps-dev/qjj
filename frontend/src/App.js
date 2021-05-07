@@ -5,9 +5,10 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Label, Button, TextField, Dialog } from "./components";
 import { Grid } from "@material-ui/core";
 import { useState } from "react";
-import { useDeviceDetect } from "./utils";
+import { useDeviceDetect, toDataUrl } from "./utils";
 import Collapse from "@material-ui/core/Collapse";
 import api from "./api";
+import axios from "axios";
 
 const useMainStyles = makeStyles((theme) => ({
   main: {
@@ -26,13 +27,36 @@ const useMainStyles = makeStyles((theme) => ({
   },
 }));
 
-function Main() {
+function Main(props) {
   const classes = useMainStyles();
+  const {
+    setDialogJogo,
+    dialogJogo,
+    dialogFeedback,
+    setDialogFeedBack,
+    showmessage,
+  } = props;
+  const defaultDados = {
+    link: "",
+    titulo: "",
+    qt_jogadores: "",
+    imagem: "",
+    imagem_url: "",
+  };
+
+  const defaultFeedback = {
+    referencia: "",
+    texto: "",
+  };
 
   const [players, setPlayers] = useState(0);
   const [currentGame, setCurrentGame] = useState(undefined);
   const [loaded, setLoaded] = useState(false);
   const [canClick, setCanClick] = useState(true);
+  const [dados, setDados] = useState(defaultDados);
+  const [feedback, setFeedback] = useState(defaultFeedback);
+  const [fromSteam, setFromSteam] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   function getRandomGame() {
     setLoaded(false);
@@ -48,9 +72,223 @@ function Main() {
       });
   }
 
+  function changeEvent(e) {
+    setDados((o) => ({
+      ...o,
+      [e.target.name]: e.target.value,
+    }));
+    if (e.target.name === "link") {
+      const link = String(e.target.value);
+      if (link.split(".")[1] === "steampowered") {
+        if (link.split("/")[3] === "app") {
+          setLoading(true);
+          axios
+            .get(
+              `https://cors-anywhere.herokuapp.com/https://store.steampowered.com/api/appdetails?appids=${
+                link.split("/")[4]
+              }`
+            )
+            .then(async (res) => {
+              const game = res.data[link.split("/")[4]].data;
+              toDataUrl(game.header_image, (w) => {
+                setDados((o) => ({
+                  ...o,
+                  titulo: game.name,
+                  imagem_url: game.header_image,
+                  imagem: w,
+                }));
+                setLoading(false);
+              });
+            })
+            .catch(() => {
+              setLoading(false);
+            });
+          setFromSteam(true);
+        }
+      }
+    }
+  }
+
+  function changeEventFeedback(e) {
+    setFeedback((o) => ({
+      ...o,
+      [e.target.name]: e.target.value,
+    }));
+  }
+
+  const closeDialog = () => {
+    setDialogJogo(false);
+    setDialogFeedBack(false);
+    setDados(defaultDados);
+    setFeedback(defaultFeedback);
+  };
+
+  const sendGame = () => {
+    setLoading(true);
+    api()
+      .post("jogos/", dados)
+      .then((r) => {
+        closeDialog();
+        showmessage(
+          "Brrrrrrrrrrrrrrabo",
+          "Valeu pela adição maninho! Você está ajudando muitas pessoas :D",
+          ["SOU FODA", "EEBA", "TE AMO ❤"]
+        );
+        setLoading(false);
+      })
+      .catch(() => {
+        showmessage(
+          "Taporr deu erro",
+          "Vish mano, deu algum erro, vê se tu botou todos os campos.",
+          ["TRISTE GAMES", "OK :(", "FLINSTON"]
+        );
+        setLoading(false);
+      });
+  };
+
+  const sendFeedback = () => {
+    setLoading(true);
+    api()
+      .post("feedback/", feedback)
+      .then((r) => {
+        closeDialog();
+        showmessage(
+          "Valeeeeu!",
+          "Você acabou de fazer esse site ficar melhor ainda, cê é foda mano",
+          ["SOU FODA", "EEBA", "TE AMO ❤"]
+        );
+        setLoading(false);
+      })
+      .catch(() => {
+        showmessage(
+          "Taporr deu erro",
+          "Vish mano, deu algum erro, vê se tu botou todos os campos.",
+          ["TRISTE GAMES", "OK :(", "FLINSTON"]
+        );
+        setLoading(false);
+      });
+  };
+
   return (
     <>
-      <Dialog open={true} title="EEbaa" />
+      <Dialog
+        loading={loading}
+        open={dialogFeedback}
+        title="Feedback!"
+        width="100%"
+        onClose={closeDialog}
+        btn1={{
+          label: ["VOLTAR"].random(),
+          click: closeDialog,
+        }}
+        btn2={{
+          label: ["ENVIAR"].random(),
+          click: sendFeedback,
+        }}
+        style={{
+          width: "100%",
+        }}
+        containerStyle={{
+          marginBottom: 50,
+        }}
+      >
+        <TextField
+          placeholder="Seu nome ou email! (Só alguma referencia)"
+          inverted
+          size={24}
+          spacing={-2}
+          name="referencia"
+          value={feedback.referencia}
+          onChange={changeEventFeedback}
+          w="bold"
+        />
+        <TextField
+          placeholder={
+            "Escreva algo bem legal aqui, pode ter certeza que eu vou ver  <3"
+          }
+          inverted
+          size={24}
+          spacing={-2}
+          name="texto"
+          value={feedback.texto}
+          onChange={changeEventFeedback}
+          multiline
+          w="bold"
+          disabled={fromSteam}
+        />
+      </Dialog>
+      <Dialog
+        loading={loading}
+        open={dialogJogo}
+        title="Adicione seu jogo :D"
+        width="100%"
+        onClose={closeDialog}
+        btn1={{
+          label: ["CANCELAR", "VOLTAR"].random(),
+          click: closeDialog,
+        }}
+        btn2={{
+          label: ["CONFIRMAR", "BOTAA 😳", "ADICIONAR"].random(),
+          click: sendGame,
+        }}
+        style={{
+          width: "100%",
+        }}
+        containerStyle={{
+          marginBottom: 50,
+        }}
+      >
+        <TextField
+          placeholder="Link para o Jogo/Loja"
+          inverted
+          size={24}
+          spacing={-2}
+          name="link"
+          value={dados.link}
+          onChange={changeEvent}
+          w="bold"
+        />
+        <TextField
+          placeholder={"Título"}
+          inverted
+          size={24}
+          spacing={-2}
+          name="titulo"
+          value={dados.titulo}
+          onChange={changeEvent}
+          w="bold"
+          disabled={fromSteam}
+        />
+        <TextField
+          placeholder={"Quantidade de Players"}
+          inverted
+          size={24}
+          spacing={-2}
+          name="qt_jogadores"
+          value={dados.qt_jogadores}
+          onChange={changeEvent}
+          type="number"
+          w="bold"
+        />
+        <TextField
+          disabled={fromSteam}
+          placeholder={"Selecione uma imagem..."}
+          inverted
+          size={24}
+          spacing={-2}
+          name="imagem_url"
+          value={dados.imagem_url}
+          filefield
+          filetype="image/*"
+          onChange={(f) => {
+            setDados((o) => ({ ...o, imagem: f.content, imagem_url: f.name }));
+          }}
+          w="bold"
+        />
+        {dados.imagem && (
+          <img width="100%" alt="game_image" src={dados.imagem} />
+        )}
+      </Dialog>
       <Grid className={classes.main} container justify="center">
         <Grid item lg={4} md={6} sm={8} xs={12}>
           <Label color="white" size={37} spacing={-2.25}>
@@ -88,7 +326,19 @@ function Main() {
             style={{ marginTop: 15 }}
             loading={!canClick}
           >
-            Me dá <b style={{ marginLeft: 5 }}>um Jogo</b>
+            <b>
+              {!currentGame
+                ? ["Me dá um Jogo", "SORTEAR", "Quero jogaaaaar"].random()
+                : [
+                    "AGORA VAI",
+                    "DE NOVO",
+                    "ESSE NÃO!",
+                    "MAIS UMA VEZ",
+                    "NAO",
+                    "AAAAAAAAAA",
+                    "AINDA NÃO",
+                  ].random()}
+            </b>
           </Button>
         </Grid>
       </Grid>
@@ -123,9 +373,10 @@ const useFooterStyles = makeStyles((theme) => ({
   },
 }));
 
-function Footer() {
+function Footer(props) {
   const classes = useFooterStyles();
   const { isMobile } = useDeviceDetect();
+  const { setDialogJogo, setDialogFeedBack } = props;
   return (
     <div className={isMobile ? classes.mainMobile : classes.main}>
       <Button
@@ -134,6 +385,7 @@ function Footer() {
         uncase
         pure
         style={{ marginBottom: isMobile ? 5 : 0 }}
+        onClick={() => setDialogJogo(true)}
       >
         Quero Adicionar um <b style={{ marginLeft: 5 }}>Jogo</b>
       </Button>
@@ -154,6 +406,7 @@ function Footer() {
               height={40}
             />
           }
+          onClick={() => setDialogFeedBack(true)}
         >
           Dar <b style={{ marginLeft: 5 }}>FeedBack</b>
         </Button>
@@ -163,6 +416,26 @@ function Footer() {
 }
 
 function App() {
+  const [dialogJogo, setDialogJogo] = useState(false);
+  const [dialogFeedback, setDialogFeedBack] = useState(false);
+
+  const defaultDialog = {
+    open: false,
+    title: "",
+    message: "",
+    btn: ["CONFIRMAR"],
+  };
+  const [dialog, setDialog] = useState(defaultDialog);
+
+  const showmessage = (titulo, text, btn) => {
+    setDialog({
+      open: true,
+      title: titulo,
+      message: text,
+      btn: btn || ["CONFIRMAR"],
+    });
+  };
+
   return (
     <div style={{ height: "100%" }}>
       <div
@@ -171,7 +444,7 @@ function App() {
           backgroundRepeat: "no-repeat",
           backgroundSize: "cover",
           backgroundPosition: "center",
-          filter: "blur(8px)",
+          filter: "blur(30px)",
           height: "100%",
           width: "100%",
           position: "fixed",
@@ -187,11 +460,42 @@ function App() {
           justifyContent: "space-between",
         }}
       >
-        <div>
-          <Main />
+        <Dialog
+          open={dialog.open}
+          title={dialog.title}
+          width="100%"
+          onClose={() => setDialog((o) => ({ ...o, open: false }))}
+          btn2={{
+            label: dialog.btn.random(),
+            click: () => {
+              if (dialog.onClose) {
+                dialog.onClose();
+              }
+              setDialog((o) => ({ ...o, open: false }));
+            },
+          }}
+        >
+          <Label size={24} align="left" w="bold" spacing={-2} color="#808080">
+            {dialog.message}
+          </Label>
+        </Dialog>
+        <div style={{ marginBottom: 30 }}>
+          <Main
+            showmessage={showmessage}
+            dialogJogo={dialogJogo}
+            dialogFeedback={dialogFeedback}
+            setDialogJogo={setDialogJogo}
+            setDialogFeedBack={setDialogFeedBack}
+          />
         </div>
         <div>
-          <Footer />
+          <Footer
+            showmessage={showmessage}
+            dialogJogo={dialogJogo}
+            dialogFeedback={dialogFeedback}
+            setDialogJogo={setDialogJogo}
+            setDialogFeedBack={setDialogFeedBack}
+          />
         </div>
       </div>
     </div>
