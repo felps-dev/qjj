@@ -1,29 +1,27 @@
 ############################################################
 # Dockerfile to build Python / Django / Mysql small container images
-# Based on Linux Alpine
+# Based on Linux
 ############################################################
 
-FROM python:3.8.2-alpine
+FROM python:3.9.2-slim-buster
 
 ENV PYTHONUNBUFFERED 1
 
-RUN apk update \
-	&& apk add --virtual build-deps gcc python3-dev musl-dev \
-	&& apk add --no-cache mariadb-connector-c-dev
-
-COPY . /app
-
-# Prevent build fail
+RUN apt update
+#    && apk add --virtual build-deps gcc python3-dev musl-dev \
+#    && apk add --no-cache mariadb-connector-c-dev git
+RUN apt-get install -y default-libmysqlclient-dev git gcc
+# RUN pip install mysql
 COPY ./requirements.txt /requirements.txt
 
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-
-# Prevent start fail
-COPY start_django.sh /start_django.sh
+RUN pip install --upgrade pip && pip install --no-cache-dir -r ./requirements.txt
 
 # Limpa espaço em disco
-RUN apk del build-deps musl-dev gcc python3-dev
+#RUN apt del build-deps musl-dev gcc python3-dev
+RUN apt-get remove -y git gcc
 RUN rm -Rf ~/.cache
+
+COPY . /app
 
 WORKDIR /app
 

@@ -8,7 +8,6 @@ import { useState } from "react";
 import { useDeviceDetect, toDataUrl } from "./utils";
 import Collapse from "@material-ui/core/Collapse";
 import api from "./api";
-import axios from "axios";
 
 const useMainStyles = makeStyles((theme) => ({
   main: {
@@ -82,12 +81,8 @@ function Main(props) {
       if (link.split(".")[1] === "steampowered") {
         if (link.split("/")[3] === "app") {
           setLoading(true);
-          axios
-            .get(
-              `https://cors-anywhere.herokuapp.com/https://store.steampowered.com/api/appdetails?appids=${
-                link.split("/")[4]
-              }`
-            )
+          api()
+            .get(`jogos/${link.split("/")[4]}/info/`)
             .then(async (res) => {
               const game = res.data[link.split("/")[4]].data;
               toDataUrl(game.header_image, (w) => {
