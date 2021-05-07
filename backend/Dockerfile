@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED 1
 RUN apt update
 #    && apk add --virtual build-deps gcc python3-dev musl-dev \
 #    && apk add --no-cache mariadb-connector-c-dev git
-RUN apt-get install -y default-libmysqlclient-dev git gcc
+RUN apt-get install -y default-libmysqlclient-dev git gcc libpq-dev
 # RUN pip install mysql
 COPY ./requirements.txt /requirements.txt
 
