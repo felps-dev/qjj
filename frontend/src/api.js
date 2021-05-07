@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const api_url =
   process.env.NODE_ENV === "production"
-    ? "https://somewhere.com/api/"
+    ? "http://qualjogojogar.online:8005/api/"
     : "http://localhost:8000/api/";
 
 export default function api() {
